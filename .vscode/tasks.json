@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "meson",
+			"mode": "reconfigure",
+			"group": "rebuild",
+			"problemMatcher": [],
+			"label": "Meson: Reconfigure"
+		},
+		{
+			"type": "meson",
+			"mode": "clean",
+			"group": "clean",
+			"problemMatcher": [],
+			"label": "Meson: Clean"
+		},
+		{
+			"type": "meson",
+			"mode": "build",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "Meson: Build all targets"
+		}
+	]
+}

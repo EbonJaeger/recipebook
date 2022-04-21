@@ -1,0 +1,7 @@
+#ifndef H_CONFIG_H
+#define H_CONFIG_H
+
+#define VERSION "@version@"
+#define APP_NAME "@app_name@"
+
+#endif
