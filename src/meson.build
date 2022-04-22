@@ -1,5 +1,6 @@
 recipebook_sources = [
     'Application.vala',
+    'Views/Window.vala',
     'main.vala'
 ]
 
