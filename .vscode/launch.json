@@ -23,6 +23,29 @@
             "preLaunchTask": "Meson: Build all targets"
         },
         {
+            "name": "Launch (Inspector)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/src/com.github.EbonJaeger.recipebook",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                { "name": "G_DEBUG_MESSAGES", "value": "all" },
+                { "name": "GTK_DEBUG", "value": "interactive" }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for GDB",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "Meson: Build all targets"
+        },
+        {
             "name": "Launch",
             "type": "cppdbg",
             "request": "launch",
