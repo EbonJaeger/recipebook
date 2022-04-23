@@ -1,6 +1,8 @@
 recipebook_sources = [
     'Application.vala',
+    'Views/Categories.vala',
     'Views/Window.vala',
+    'Views/Widgets/CategoryButton.vala',
     'main.vala'
 ]
 
