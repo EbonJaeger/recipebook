@@ -3,7 +3,7 @@ namespace RecipeBook.View {
      * This class holds the view showing the different categories
      * of recipes. It uses a FlowBox to hold the category buttons.
      */
-    public class Categories : Gtk.Box {
+    public class Categories : AbstractView {
         private Gtk.FlowBox flow_box;
         private Widgets.CategoryButton new_category_button;
 
@@ -13,26 +13,10 @@ namespace RecipeBook.View {
          * Creates a new categories view.
          */
         public Categories() {
-            Object(
-                orientation: Gtk.Orientation.VERTICAL,
-                spacing: 0
-            );
+            base("categories", "Categories");
         }
 
-        construct {
-            build_view();
-            connect_signals();
-        }
-
-        private void build_view() {
-            // Create a title label
-            var title = new Gtk.Label("<b>Categories</b>") {
-                use_markup = true,
-                margin_bottom = 16,
-                margin_top = 16
-            };
-            this.append(title);
-
+        protected override void build_view() {
             // Put everything in a scrolled window
             var scrolled_window = new Gtk.ScrolledWindow() {
                 hscrollbar_policy = Gtk.PolicyType.NEVER,
@@ -60,7 +44,7 @@ namespace RecipeBook.View {
 
             // Button to go to the new category page where a user
             // can create a new category.
-            this.new_category_button = new Widgets.CategoryButton("add-category", "Add category") {
+            this.new_category_button = new Widgets.CategoryButton("new-category", "Add category") {
                 image_source = "document-new-symbolic"
             };
             flow_box.append(new_category_button);
@@ -68,7 +52,7 @@ namespace RecipeBook.View {
             this.append(scrolled_window);
         }
 
-        private void connect_signals() {
+        protected override void connect_signals() {
             this.new_category_button.clicked.connect(() => {
                 this.button_clicked(new_category_button.id);
             });

@@ -1,8 +1,11 @@
 recipebook_sources = [
     'Application.vala',
+    'Views/AbstractView.vala',
     'Views/Categories.vala',
     'Views/NewCategory.vala',
     'Views/Window.vala',
+    'Views/Widgets/Breadcrumb.vala',
+    'Views/Widgets/BreadcrumbChain.vala',
     'Views/Widgets/CategoryButton.vala',
     'main.vala'
 ]
