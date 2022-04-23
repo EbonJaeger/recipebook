@@ -7,6 +7,8 @@ namespace RecipeBook.View {
         private Gtk.FlowBox flow_box;
         private Widgets.CategoryButton new_category_button;
 
+        public signal void button_clicked(string id);
+
         /**
          * Creates a new categories view.
          */
@@ -19,6 +21,7 @@ namespace RecipeBook.View {
 
         construct {
             build_view();
+            connect_signals();
         }
 
         private void build_view() {
@@ -55,14 +58,20 @@ namespace RecipeBook.View {
             var unorganized_button = new Widgets.CategoryButton("unorganized", "Unorganized");
             flow_box.append(unorganized_button);
 
-            // This button will be "special" because it will have
-            // custom behavior compared to regular category buttons.
+            // Button to go to the new category page where a user
+            // can create a new category.
             this.new_category_button = new Widgets.CategoryButton("add-category", "Add category") {
                 image_source = "document-new-symbolic"
             };
             flow_box.append(new_category_button);
             
             this.append(scrolled_window);
+        }
+
+        private void connect_signals() {
+            this.new_category_button.clicked.connect(() => {
+                this.button_clicked(new_category_button.id);
+            });
         }
     }
 }
