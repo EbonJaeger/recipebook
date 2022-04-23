@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Recipe Book
+Comment=Create and manage recipes
+Keywords=cooking;recipes;recipe;
+Exec=@exec_name@
+Icon=com.github.EbonJaeger.recipebook
+Terminal=false
+Type=Application
+Categories=Utility;

@@ -55,5 +55,6 @@ config_dep = declare_dependency(
     include_directories: include_directories('.')
 )
 
+subdir('data')
 subdir('libcore')
 subdir('src')
