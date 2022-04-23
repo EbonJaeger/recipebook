@@ -1,4 +1,8 @@
 namespace RecipeBook.View.Widgets {
+    /**
+     * This class is a button for use in the category view to navigate
+     * to the various categories that a user might have set up.
+     */
     public class CategoryButton : Gtk.Button {
         public string id { get; construct set; }
 
@@ -23,6 +27,9 @@ namespace RecipeBook.View.Widgets {
         private Gtk.Image image;
         private Gtk.Label name_label;
 
+        /**
+         * Create a new CategoryButton with an ID and display name.
+         */
         public CategoryButton(string id, string display_name) {
             Object(
                 id: id,
@@ -53,6 +60,11 @@ namespace RecipeBook.View.Widgets {
             this.set_child(box);
         }
 
+        /**
+         * Set the display name label for this CategoryButton.
+         *
+         * As a side-effect, this also sets the tooltip text.
+         */
         public new void set_label(string display_name) {
             if (this.name_label == null) {
                 this.name_label = new Gtk.Label(display_name) {
@@ -66,6 +78,9 @@ namespace RecipeBook.View.Widgets {
             }
         }
 
+        /**
+         * Set the image for this button from an icon name.
+         */
         public void set_image_from_name(string name) {
             if (this.image == null) {
                 this.image = new Gtk.Image.from_icon_name(name) {
