@@ -9,7 +9,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
-                { "name": "G_DEBUG_MESSAGES", "value": "all" }
+                { "name": "G_MESSAGES_DEBUG", "value": "all" }
             ],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -31,7 +31,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
-                { "name": "G_DEBUG_MESSAGES", "value": "all" },
+                { "name": "G_MESSAGES_DEBUG", "value": "all" },
                 { "name": "GTK_DEBUG", "value": "interactive" }
             ],
             "externalConsole": false,
@@ -54,7 +54,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
-                { "name": "G_DEBUG_MESSAGES", "value": "all" }
+                { "name": "G_MESSAGES_DEBUG", "value": "all" }
             ],
             "externalConsole": false,
             "linux": {
