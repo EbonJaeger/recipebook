@@ -58,3 +58,5 @@ config_dep = declare_dependency(
 subdir('data')
 subdir('libcore')
 subdir('src')
+
+meson.add_install_script('meson/post_install.py')

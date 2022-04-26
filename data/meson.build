@@ -9,3 +9,8 @@ desktop = configure_file(
     install: true,
     install_dir: join_paths(get_option('datadir'), 'applications'),
 )
+
+install_data(
+    join_paths(meson.current_source_dir(), 'icons', 'scalable', 'com.github.EbonJaeger.recipebook.svg'),
+    install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'apps')
+)

@@ -10,7 +10,7 @@ namespace RecipeBook.View {
         public Window(RecipeBook.Application app) {
             Object(
                 application: app,
-                icon_name: "applications-accessories",
+                icon_name: "com.github.EbonJaeger.recipebook",
                 title: APP_TITLE,
                 width_request: 720,
                 height_request: 644
