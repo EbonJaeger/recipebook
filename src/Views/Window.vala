@@ -2,6 +2,7 @@ namespace RecipeBook.View {
     public class Window : Gtk.ApplicationWindow {
         private Gtk.HeaderBar header;
         private Gtk.Button go_back_button;
+        private Gtk.Button home_button;
         private Gtk.Stack pages;
 
         private Widgets.BreadcrumbChain breadcrumbs;
@@ -29,10 +30,16 @@ namespace RecipeBook.View {
 
             this.go_back_button = new Gtk.Button() {
                 icon_name = "go-previous-symbolic",
+                tooltip_text = "Go back",
                 sensitive = false
             };
-            this.go_back_button.set_tooltip_text("Go back");
             this.header.pack_start(go_back_button);
+
+            this.home_button = new Gtk.Button() {
+                icon_name = "go-home-symbolic",
+                tooltip_text = "Home"
+            };
+            this.header.pack_start(home_button);
 
             this.set_titlebar(header);
 
@@ -76,7 +83,11 @@ namespace RecipeBook.View {
                 }
             });
 
-            this.breadcrumbs.element_clicked.connect((id) => {
+            this.home_button.clicked.connect(() => {
+                this.breadcrumbs.go_back_until(categories_view.id);
+            });
+
+            this.breadcrumbs.navigation_changed.connect((id) => {
                 this.pages.set_visible_child_name(id);
                 this.set_title();
 

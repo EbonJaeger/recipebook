@@ -7,10 +7,12 @@ namespace RecipeBook.View.Widgets {
         private GLib.List<Breadcrumb> crumbs;
 
         /**
-         * Emitted when a breadcrumb element has been clicked,
-         * with the element's view's `id`.
+         * Emitted when a breadcrumb element has been clicked, or
+         * otherwise gone back along the trail.
+         *
+         * Has the element's `id` as the paramater.
          */
-        public signal void element_clicked(string id);
+        public signal void navigation_changed(string id);
 
         /**
          * Creates a new breadcrumb chain widget.
@@ -33,17 +35,7 @@ namespace RecipeBook.View.Widgets {
 
             var breadcrumb = new Breadcrumb(view);
             breadcrumb.clicked.connect(() => {
-                // Don't emit a signal for clicking the last element
-                // since that's the current view being displayed.
-                if (this.crumbs.last().data == breadcrumb) {
-                    return;
-                }
-
-                // Go back until we're at the element that was clicked
-                while(go_previous() != breadcrumb.view.id) {}
-
-                // Emit our signal to update the view
-                this.element_clicked(view.id);
+                this.go_back_until(breadcrumb.id);
             });
 
             // Append a separator if there are previous elements
@@ -55,6 +47,26 @@ namespace RecipeBook.View.Widgets {
 
             base.append(breadcrumb);
             this.crumbs.append(breadcrumb);
+        }
+
+        /**
+         * Go back along the breadcrumb trail until reaching the
+         * given `id`.
+         *
+         * Emits a signal at the end to update the view.
+         */
+        public void go_back_until(string id) {
+            // Don't emit a signal for clicking the last element
+            // since that's the current view being displayed.
+            if (this.crumbs.last().data.id == id) {
+                return;
+            }
+
+            // Go back until we're at the element
+            while(go_previous() != id) {}
+
+            // Emit our signal to update the view
+            this.navigation_changed(id);
         }
 
         /**

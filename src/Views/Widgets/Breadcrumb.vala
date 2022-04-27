@@ -5,6 +5,7 @@ namespace RecipeBook.View.Widgets {
      */
     public class Breadcrumb : Gtk.Button {
         public AbstractView view { get; construct; }
+        public string id { public get; construct set; }
 
         /**
          * Create a new breadcrumb from the given `view`.
@@ -16,6 +17,7 @@ namespace RecipeBook.View.Widgets {
         construct {
             label = view.title;
             tooltip_text = view.title;
+            id = view.id;
         }
 
         /**
