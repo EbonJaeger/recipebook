@@ -34,12 +34,18 @@ namespace RecipeBook.View {
             this.go_back_button.set_tooltip_text("Go back");
             this.header.pack_start(go_back_button);
 
-            this.breadcrumbs = new Widgets.BreadcrumbChain();
-            this.header.pack_start(breadcrumbs);
-
             this.set_titlebar(header);
 
             var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
+            var subheader = new Gtk.Box(Gtk.Orientation.VERTICAL, 0) {
+                margin_bottom = 16
+            };
+            box.append(subheader);
+
+            this.breadcrumbs = new Widgets.BreadcrumbChain() {
+                halign = Gtk.Align.START
+            };
+            subheader.append(breadcrumbs);
 
             this.pages = new Gtk.Stack() {
                 transition_duration = 250,
@@ -53,6 +59,8 @@ namespace RecipeBook.View {
             this.pages.add_named(categories_view, categories_view.id);
             this.pages.add_named(new_category_view, new_category_view.id);
 
+            this.set_title();
+
             box.append(pages);
 
             this.set_child(box);
@@ -61,6 +69,7 @@ namespace RecipeBook.View {
         private void connect_signals() {
             this.go_back_button.clicked.connect(() => {
                 this.pages.set_visible_child_name(breadcrumbs.go_previous());
+                this.set_title();
 
                 if (breadcrumbs.is_at_last()) {
                     this.go_back_button.sensitive = false;
@@ -69,6 +78,7 @@ namespace RecipeBook.View {
 
             this.breadcrumbs.element_clicked.connect((id) => {
                 this.pages.set_visible_child_name(id);
+                this.set_title();
 
                 if (breadcrumbs.is_at_last()) {
                     this.go_back_button.sensitive = false;
@@ -78,8 +88,26 @@ namespace RecipeBook.View {
             this.categories_view.button_clicked.connect((id) => {
                 this.go_back_button.sensitive = true;
                 this.pages.set_visible_child_name(id);
+                this.set_title();
                 this.breadcrumbs.append(pages.get_visible_child() as AbstractView);
             });
+        }
+
+        /**
+         * Sets the window title based on the current view being shown.
+         *
+         * If the view is the main categories view, only the base app
+         * name will be shown.
+         */
+        private new void set_title() {
+            var current_page = pages.get_visible_child() as AbstractView;
+            var new_title = APP_TITLE;
+
+            if (current_page.id != "categories") {
+                new_title = APP_TITLE + " - " + current_page.title;
+            }
+
+            base.set_title(new_title);
         }
     }
 }

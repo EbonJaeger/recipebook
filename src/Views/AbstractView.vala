@@ -18,15 +18,6 @@ namespace RecipeBook.View {
         }
 
         construct {
-            // Create a title label
-            var formatted = string.join("", "<b>", this.title, "</b>");
-            var title = new Gtk.Label(formatted) {
-                use_markup = true,
-                margin_bottom = 16,
-                margin_top = 16
-            };
-            this.append(title);
-
             build_view();
             connect_signals();
         }
