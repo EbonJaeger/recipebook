@@ -5,7 +5,9 @@ namespace RecipeBook.View {
      */
     public class Categories : AbstractView {
         private Gtk.FlowBox flow_box;
-        private Widgets.CategoryButton new_category_button;
+
+        private RecipeBook.Database db;
+        private ListStore model;
 
         public signal void button_clicked(string id);
 
@@ -14,6 +16,16 @@ namespace RecipeBook.View {
          */
         public Categories() {
             base("categories", "Categories");
+
+            this.db = Database.@get();
+            this.model = new ListStore(typeof(Category));
+
+            try {
+                this.db.rebuild_categories(model);
+                this.flow_box.bind_model(model, create_new_button);
+            } catch (IOError e) {
+                critical("Error building categories: %s", e.message);
+            }
         }
 
         protected override void build_view() {
@@ -36,26 +48,29 @@ namespace RecipeBook.View {
             };
             scrolled_window.set_child(flow_box);
 
-            // Temporary button for unorganized category.
-            // In the future, this should be set up and read from
-            // the database.
-            var unorganized_button = new Widgets.CategoryButton("unorganized", "Unorganized");
-            flow_box.append(unorganized_button);
-
-            // Button to go to the new category page where a user
-            // can create a new category.
-            this.new_category_button = new Widgets.CategoryButton("new-category", "Add category") {
-                image_source = "document-new-symbolic"
-            };
-            flow_box.append(new_category_button);
-            
             this.append(scrolled_window);
         }
 
         protected override void connect_signals() {
-            this.new_category_button.clicked.connect(() => {
-                this.button_clicked(new_category_button.id);
+        }
+
+        /**
+         * Create's a new widget for our FlowBox from a Category.
+         *
+         * The method signature is generic to avoid having to cast
+         * the function when passing it to `bind_model` on the
+         * FlowBox as doing that causes `this` to be passed here
+         * instead of the data from the model.
+         */
+        private Gtk.Widget create_new_button(Object data) {
+            assert(data is Category);
+
+            var category = (Category) data;
+            var button = new Widgets.CategoryButton(category);
+            button.clicked.connect(() => {
+                this.button_clicked(button.category.id);
             });
+            return button;
         }
     }
 }

@@ -21,6 +21,7 @@ vala = meson.get_compiler('vala')
 
 glib_version = '>= 2.64.0'
 
+dep_gee = dependency('gee-0.8', version: '>= 0.20.0')
 dep_glib = dependency('glib-2.0', version: glib_version)
 dep_gio = dependency('gio-unix-2.0', version: glib_version)
 dep_gtk = dependency('gtk4', version: '>= 4.6.0')

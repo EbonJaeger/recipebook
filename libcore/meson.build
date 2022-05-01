@@ -2,10 +2,12 @@ recipebook_core_name = 'recipebook-core'
 
 recipebook_core_deps = [
     common_deps,
+    dep_gee,
     dep_sqlite3
 ]
 
 recipebook_core_files = files(
+    'Category.vala',
     'Database.vala',
     'Resources.vala'
 )

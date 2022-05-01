@@ -2,7 +2,7 @@ namespace RecipeBook.View {
     public class NewCategory : AbstractView {
 
         public NewCategory() {
-            base("new-category", "New Category");
+            base("add-category", "New Category");
         }
 
         protected override void build_view() {

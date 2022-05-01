@@ -1,8 +1,10 @@
 namespace RecipeBook {
-    public class Database {
-        protected static Sqlite.Database db;
+    public class Database : Object {
+        private static Database _instance;
 
-        public Database() {
+        protected Sqlite.Database db;
+
+        private Database() {
             try {
                 open_recipes_db();
             } catch (IOError e) {
@@ -10,7 +12,15 @@ namespace RecipeBook {
             }
         }
 
-        public bool open_recipes_db() throws GLib.IOError {
+        public static new Database @get() {
+            if (_instance == null) {
+                _instance = new Database();
+            }
+
+            return _instance;
+        }
+
+        private bool open_recipes_db() throws GLib.IOError {
             File home_dir = File.new_for_path(Environment.get_home_dir());
             File data_dir = home_dir.get_child(".config").get_child("recipebook");
 
@@ -45,105 +55,124 @@ namespace RecipeBook {
             return initialize_tables();
         }
 
+        /**
+         * Re-populates a `ListStore` with all of the current categories in the
+         * database.
+         */
+        public void rebuild_categories(ListStore store) throws IOError {
+            store.remove_all();
+
+            // Create the statement
+            Sqlite.Statement stmt;
+            var sql = "SELECT * FROM categories;";
+            int ret = db.prepare_v2(sql, sql.length, out stmt);
+
+            if (ret != Sqlite.OK) {
+                throw new GLib.IOError.FAILED("error getting categories: code: %d: %s", ret, db.errmsg());
+            }
+
+            // Execute the statement and get the data
+            int cols = stmt.column_count();
+            while (stmt.step() == Sqlite.ROW) {
+                string id = null, name = null, description = null;
+                string? picture = null;
+
+                // Get the text from each column in this row
+                for (int i = 0; i < cols; i++) {
+                    var text = stmt.column_text(i);
+
+                    // Figure out what column we're on
+                    switch (i) {
+                        case 0:
+                            id = text;
+                            break;
+                        case 1:
+                            name = text;
+                            break;
+                        case 2:
+                            description = text;
+                            break;
+                        case 3:
+                            picture = text;
+                            break;
+                        default:
+                            critical("Unknown column index: %d", i);
+                            continue;
+                    }
+                }
+
+                // Add the category
+                store.append(new Category(id, name, description, picture));
+            }
+        }
+
         private bool initialize_tables() {
-            // Create recipes table
-            Sqlite.Statement create_recipes;
-            int ret = db.prepare_v2("CREATE TABLE IF NOT EXISTS recipes (" +
-                                        "id INTEGER PRIMARY KEY, " +
-                                        "picture TEXT, " +
-                                        "title TEXT NOT NULL, " +
-                                        "description TEXT NOT NULL, " +
-                                        "prep_time TEXT NOT NULL, " +
-                                        "cook_time TEXT NOT NULL" +
-                                    ");",
-                                    -1,
-                                    out create_recipes);
+            var query = """
+                CREATE TABLE IF NOT EXISTS categories (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    picture TEXT
+                );
 
-            assert(ret == Sqlite.OK);
-            ret = create_recipes.step();
+                INSERT OR IGNORE INTO categories (id, name, description, picture) 
+                VALUES(
+                    'unorganized', 'Unorganized', 'Recipes that don''t fit in any other category', 'document-new-symbolic'
+                );
 
-            if (ret != Sqlite.DONE) {
-                critical("Unable to create recipes table: Code %d: %s", ret, db.errmsg());
-                return false;
-            }
+                INSERT OR IGNORE INTO categories (id, name, description, picture) 
+                VALUES(
+                    'add-category', 'Add Category', 'Create a new catetory of recipes', 'document-new-symbolic'
+                );
 
-            // Create ingredient section table
-            Sqlite.Statement create_sections_stmt;
-            ret = db.prepare_v2("CREATE TABLE IF NOT EXISTS ingredient_sections (" +
-                                    "id INTEGER PRIMARY KEY, " +
-                                    "recipe_id INTEGER, " +
-                                    "title TEXT NOT NULL, " +
-                                    "FOREIGN KEY(recipe_id) REFERENCES recipes(id)" +
-                                ");",
-                                -1,
-                                out create_sections_stmt);
+                CREATE TABLE IF NOT EXISTS recipes (
+                    id INTEGER PRIMARY KEY,
+                    category TEXT,
+                    picture TEXT,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    prep_time TEXT NOT NULL,
+                    cook_time TEXT NOT NULL,
+                    FOREIGN KEY(category) REFERENCES categories(id)
+                );
 
-            assert(ret == Sqlite.OK);
-            ret = create_sections_stmt.step();
+                CREATE TABLE IF NOT EXISTS ingredient_sections (
+                    id INTEGER PRIMARY KEY,
+                    recipe_id INTEGER,
+                    title TEXT NOT NULL,
+                    FOREIGN KEY(recipe_id) REFERENCES recipes(id)
+                );
 
-            if (ret != Sqlite.DONE) {
-                critical("Unable to create ingredient section table: Code %d: %s", ret, db.errmsg());
-                return false;
-            }
+                CREATE TABLE IF NOT EXISTS ingredients (
+                    id INTEGER PRIMARY KEY,
+                    recipe_id INTEGER,
+                    section_id INTEGER,
+                    item TEXT NOT NULL,
+                    FOREIGN KEY(recipe_id) REFERENCES recipes(id),
+                    FOREIGN KEY(section_id) REFERENCES ingredient_sections(id)
+                );
 
-            // Create ingredients table
-            Sqlite.Statement create_ingredients_stmt;
-            ret = db.prepare_v2("CREATE TABLE IF NOT EXISTS ingredients (" +
-                                    "id INTEGER PRIMARY KEY, " +
-                                    "recipe_id INTEGER, " +
-                                    "section_id INTEGER, " +
-                                    "item TEXT NOT NULL, " +
-                                    "FOREIGN KEY(recipe_id) REFERENCES recipes(id), " +
-                                    "FOREIGN KEY(section_id) REFERENCES ingredient_sections(id)" +
-                                ");",
-                                -1,
-                                out create_ingredients_stmt);
+                CREATE TABLE IF NOT EXISTS steps_sections (
+                    id INTEGER PRIMARY KEY,
+                    recipe_id INTEGER,
+                    title TEXT NOT NULL,
+                    FOREIGN KEY(recipe_id) REFERENCES recipes(id)
+                );
 
-            assert(ret == Sqlite.OK);
-            ret = create_ingredients_stmt.step();
+                CREATE TABLE IF NOT EXISTS steps (
+                    id INTEGER PRIMARY KEY,
+                    recipe_id INTEGER,
+                    section_id INTEGER,
+                    item TEXT NOT NULL,
+                    FOREIGN KEY(recipe_id) REFERENCES recipes(id),
+                    FOREIGN KEY(section_id) REFERENCES ingredient_sections(id)
+                );
+            """;
 
-            if (ret != Sqlite.DONE) {
-                critical("Unable to create ingredients table: Code %d: %s", ret, db.errmsg());
-                return false;
-            }
-
-            // Create directions section table
-            Sqlite.Statement create_steps_sections_stmt;
-            ret = db.prepare_v2("CREATE TABLE IF NOT EXISTS steps_sections (" +
-                                    "id INTEGER PRIMARY KEY, " +
-                                    "recipe_id INTEGER, " +
-                                    "title TEXT NOT NULL, " +
-                                    "FOREIGN KEY(recipe_id) REFERENCES recipes(id)" +
-                                ");",
-                                -1,
-                                out create_steps_sections_stmt);
-
-            assert(ret == Sqlite.OK);
-            ret = create_steps_sections_stmt.step();
-
-            if (ret != Sqlite.DONE) {
-                critical("Unable to create steps section table: Code %d: %s", ret, db.errmsg());
-                return false;
-            }
-
-            // Create ingredients table
-            Sqlite.Statement create_steps_stmt;
-            ret = db.prepare_v2("CREATE TABLE IF NOT EXISTS steps (" +
-                                    "id INTEGER PRIMARY KEY, " +
-                                    "recipe_id INTEGER, " +
-                                    "section_id INTEGER, " +
-                                    "item TEXT NOT NULL, " +
-                                    "FOREIGN KEY(recipe_id) REFERENCES recipes(id), " +
-                                    "FOREIGN KEY(section_id) REFERENCES ingredient_sections(id)" +
-                                ");",
-                                -1,
-                                out create_steps_stmt);
-
-            assert(ret == Sqlite.OK);
-            ret = create_steps_stmt.step();
-
-            if (ret != Sqlite.DONE) {
-                critical("Unable to create steps table: Code %d: %s", ret, db.errmsg());
+            string? errmsg;
+            int ret = db.exec(query, null, out errmsg);
+            if (ret != Sqlite.OK) {
+                critical("Error initializing database information: %s", errmsg);
                 return false;
             }
 

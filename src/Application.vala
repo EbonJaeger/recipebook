@@ -6,7 +6,7 @@ public class RecipeBook.Application : Gtk.Application {
     }
 
     construct {
-        this.db = new Database();
+        this.db = Database.@get();
     }
 
     // TODO: For some reason this causes a segfault

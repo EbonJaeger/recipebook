@@ -4,36 +4,18 @@ namespace RecipeBook.View.Widgets {
      * to the various categories that a user might have set up.
      */
     public class CategoryButton : Gtk.Button {
-        public string id { get; construct set; }
-
-        private string? _display_name = null;
-        public string? display_name {
-            get { return _display_name; }
-            construct set {
-                this._display_name = value;
-                this.set_label(value);
-            }
-        }
-
-        private string? _image_source = null;
-        public string? image_source {
-            get { return _image_source; }
-            set {
-                this._image_source = value;
-                this.set_image_from_name(value);
-            }
-        }
+        public Category category { get; construct; }
 
         private Gtk.Image image;
         private Gtk.Label name_label;
 
         /**
-         * Create a new CategoryButton with an ID and display name.
+         * Create a new CategoryButton from a `category` object.
          */
-        public CategoryButton(string id, string display_name) {
+        public CategoryButton(Category category) {
+            debug("creating category button: %s, %s, %s", category.id, category.name, category.image_path);
             Object(
-                id: id,
-                display_name: display_name,
+                category: category,
                 width_request: 96,
                 height_request: 96
             );
@@ -46,51 +28,23 @@ namespace RecipeBook.View.Widgets {
         private void build_widget() {
             var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 4);
 
-            if (this.image == null) {
-                this.image = new Gtk.Image.from_icon_name("document-open-symbolic") {
-                    icon_size = Gtk.IconSize.LARGE,
-                    margin_top = 16,
-                    margin_bottom = 16
-                };
-            }
-            
+            this.image = new Gtk.Image.from_icon_name(category.image_path ?? "document-open-symbolic") {
+                icon_size = Gtk.IconSize.LARGE,
+                margin_top = 16,
+                margin_bottom = 16
+            };
+
+            this.name_label = new Gtk.Label(category.name) {
+                ellipsize = Pango.EllipsizeMode.END,
+                max_width_chars = 64
+            };
+
+            this.set_tooltip_text(category.description);
+
             box.prepend(image);
             box.append(name_label);
 
             this.set_child(box);
-        }
-
-        /**
-         * Set the display name label for this CategoryButton.
-         *
-         * As a side-effect, this also sets the tooltip text.
-         */
-        public new void set_label(string display_name) {
-            if (this.name_label == null) {
-                this.name_label = new Gtk.Label(display_name) {
-                    ellipsize = Pango.EllipsizeMode.END,
-                    max_width_chars = 64
-                };
-
-                this.set_tooltip_text(display_name);
-            } else {
-                this.name_label.set_text(display_name);
-            }
-        }
-
-        /**
-         * Set the image for this button from an icon name.
-         */
-        public void set_image_from_name(string name) {
-            if (this.image == null) {
-                this.image = new Gtk.Image.from_icon_name(name) {
-                    icon_size = Gtk.IconSize.LARGE,
-                    margin_top = 16,
-                    margin_bottom = 16
-                };
-            } else {
-                this.image.set_from_icon_name(name);
-            }
         }
     }
 }
