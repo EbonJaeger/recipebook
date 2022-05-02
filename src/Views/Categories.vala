@@ -22,6 +22,7 @@ namespace RecipeBook.View {
 
             try {
                 this.db.rebuild_categories(model);
+                this.model.sort(compare_categories);
                 this.flow_box.bind_model(model, create_new_button);
             } catch (IOError e) {
                 critical("Error building categories: %s", e.message);
@@ -71,6 +72,34 @@ namespace RecipeBook.View {
                 this.button_clicked(button.category.id);
             });
             return button;
+        }
+
+        /**
+         * Sort categories by ID.
+         *
+         * This always puts the add category button last, with the
+         * unorganized category before it. All other categories are
+         * sorted alphabetically.
+         */
+        private int compare_categories(Object a, Object b) {
+            assert(a is Category);
+            assert(b is Category);
+
+            var cat_a = (Category) a;
+            var cat_b = (Category) b;
+
+            if (cat_a.id == "unorganized") {
+                // Unorganized category should always be second to last
+                if (cat_b.id == "add-category") {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            } else if (cat_a.id == "add-category") {
+                return 1; // Add category button should always be last
+            } else {
+                return cat_a.id.collate(cat_b.id); // Any other categories, go alphabetically
+            }
         }
     }
 }
