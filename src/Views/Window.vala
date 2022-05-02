@@ -96,9 +96,15 @@ namespace RecipeBook.View {
                 }
             });
 
-            this.categories_view.button_clicked.connect((id) => {
+            this.categories_view.button_clicked.connect((category) => {
                 this.go_back_button.sensitive = true;
-                this.pages.set_visible_child_name(id);
+
+                // Make sure we have a page to go to
+                if (pages.get_child_by_name(category.id) == null) {
+                    this.pages.add_named(new CategoryView(category), category.id);
+                }
+
+                this.pages.set_visible_child_name(category.id);
                 this.set_title();
                 this.breadcrumbs.append(pages.get_visible_child() as AbstractView);
             });

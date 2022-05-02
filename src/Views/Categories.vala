@@ -9,7 +9,7 @@ namespace RecipeBook.View {
         private RecipeBook.Database db;
         private ListStore model;
 
-        public signal void button_clicked(string id);
+        public signal void button_clicked(Category category);
 
         /**
          * Creates a new categories view.
@@ -69,7 +69,7 @@ namespace RecipeBook.View {
             var category = (Category) data;
             var button = new Widgets.CategoryButton(category);
             button.clicked.connect(() => {
-                this.button_clicked(button.category.id);
+                this.button_clicked(button.category);
             });
             return button;
         }
