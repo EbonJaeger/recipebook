@@ -1,4 +1,7 @@
 namespace RecipeBook.View.Widgets {
+    /**
+     * A widget containing a single-line text input.
+     */
     public class FormTextEntry : FormControl {
         private string placeholder_text;
 
@@ -20,6 +23,14 @@ namespace RecipeBook.View.Widgets {
             assert (entry != null);
 
             return this.entry.text;
+        }
+
+        protected override void on_widget_clicked(int n_press, double x, double y) {
+            assert (entry != null);
+
+            if (x < get_width () && y < get_height ()) {
+                this.entry.grab_focus ();
+            }
         }
     }
 }
