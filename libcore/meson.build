@@ -9,6 +9,7 @@ recipebook_core_deps = [
 recipebook_core_files = files(
     'Category.vala',
     'Database.vala',
+    'Recipe.vala',
     'Resources.vala'
 )
 

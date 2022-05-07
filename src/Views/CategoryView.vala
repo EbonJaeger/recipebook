@@ -4,6 +4,10 @@ namespace RecipeBook.View {
 
         private Gtk.ListBox recipes_box;
 
+        private RecipeBook.Database db;
+
+        public signal void recipe_button_clicked(string id, Recipe recipe);
+
         /**
          * Represents a view for a single Category.
          */
@@ -15,6 +19,14 @@ namespace RecipeBook.View {
                 orientation: Gtk.Orientation.VERTICAL,
                 spacing: 0
             );
+
+            this.db = Database.@get();
+
+            try {
+                db.rebuild_recipes(category);
+            } catch (IOError e) {
+                critical("error getting recipes: %s", e.message);
+            }
         }
         
         protected override void build_view() {
@@ -50,7 +62,11 @@ namespace RecipeBook.View {
             };
             placeholder.get_style_context().add_class("dim-label");
 
-            var add_recipe_button = new Widgets.RecipeButton("New Recipe", "Add a new recipe to this category. aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "list-add-symbolic");
+            var add_recipe_button = new Widgets.RecipeButton("New Recipe", "Add a new recipe to this category.", "list-add-symbolic");
+            add_recipe_button.clicked.connect(() => {
+                var recipe = new Recipe(category, 0, "New Recipe", "", "", "", "");
+                this.recipe_button_clicked("edit-recipe", recipe);
+            });
             this.recipes_box.append(add_recipe_button);
 
             recipes_box.set_placeholder(placeholder);

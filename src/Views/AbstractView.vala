@@ -6,7 +6,7 @@ namespace RecipeBook.View {
         /** The ID for this view. */
         public string id { get; construct; }
         /** The title of this view. */
-        public string title { get; construct; }
+        public string title { get; construct set; }
 
         protected AbstractView(string id, string title) {
             Object(

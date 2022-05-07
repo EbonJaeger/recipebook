@@ -7,6 +7,7 @@ namespace RecipeBook.View {
 
         private Widgets.BreadcrumbChain breadcrumbs;
         private Categories categories_view;
+        private EditRecipe edit_recipe_view;
 
         public Window(RecipeBook.Application app) {
             Object(
@@ -63,8 +64,11 @@ namespace RecipeBook.View {
             this.breadcrumbs.append(categories_view);
             var new_category_view = new NewCategory();
 
+            this.edit_recipe_view = new EditRecipe();
+
             this.pages.add_named(categories_view, categories_view.id);
             this.pages.add_named(new_category_view, new_category_view.id);
+            this.pages.add_named(edit_recipe_view, edit_recipe_view.id);
 
             this.set_title();
 
@@ -96,18 +100,58 @@ namespace RecipeBook.View {
                 }
             });
 
-            this.categories_view.button_clicked.connect((category) => {
-                this.go_back_button.sensitive = true;
+            this.categories_view.button_clicked.connect(on_category_button_clicked);
+        }
 
-                // Make sure we have a page to go to
-                if (pages.get_child_by_name(category.id) == null) {
-                    this.pages.add_named(new CategoryView(category), category.id);
-                }
+        /**
+         * Handles when a category button has been clicked.
+         *
+         * It sets the visible page in the stack and updates the title.
+         * If a page for the `category` has not yet been created,
+         * this function will create one and then set it as the
+         * visible page in the stack.
+         */
+        private void on_category_button_clicked(Category category) {
+            debug("category button clicked with ID '%s'", category.id);
+            this.go_back_button.sensitive = true;
 
-                this.pages.set_visible_child_name(category.id);
-                this.set_title();
-                this.breadcrumbs.append(pages.get_visible_child() as AbstractView);
-            });
+            // Make sure we have a page to go to
+            if (pages.get_child_by_name(category.id) == null) {
+                debug("creating new category view for '%s'", category.id);
+                var view = new CategoryView(category);
+                view.recipe_button_clicked.connect(on_recipe_button_clicked);
+                this.pages.add_named(view, category.id);
+            }
+
+            // Update the view
+            this.pages.set_visible_child_name(category.id);
+            this.set_title();
+            this.breadcrumbs.append(pages.get_visible_child() as AbstractView);
+        }
+
+        /**
+         * Handles when a recipe button in a category has been clicked.
+         *
+         * It sets the visible page in the stack, updates the title,
+         * and if need be, updates the Edit Recipe page with the new
+         * recipe.
+         */
+        private void on_recipe_button_clicked(string id, Recipe recipe) {
+            debug("recipe button clicked with ID '%s'", id);
+            var view = pages.get_child_by_name(id) as AbstractView;
+
+            // If it's the new recipe button, update the edit
+            // view with the new (blank) recipe.
+            if (view is EditRecipe) {
+                debug("updating edit recipe page");
+                var edit = view as EditRecipe;
+                edit.update_from_recipe(recipe);
+            }
+
+            // Update the view
+            this.pages.set_visible_child(view);
+            this.set_title();
+            this.breadcrumbs.append(view);
         }
 
         /**

@@ -13,7 +13,6 @@ namespace RecipeBook.View.Widgets {
          * Create a new CategoryButton from a `category` object.
          */
         public CategoryButton(Category category) {
-            debug("creating category button: %s, %s, %s", category.id, category.name, category.image_path);
             Object(
                 category: category,
                 width_request: 96,
