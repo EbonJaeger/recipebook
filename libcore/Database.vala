@@ -30,8 +30,7 @@ namespace RecipeBook {
         }
 
         private bool open_recipes_db() throws GLib.IOError {
-            File home_dir = File.new_for_path(Environment.get_home_dir());
-            File data_dir = home_dir.get_child(".config").get_child("recipebook");
+            File data_dir = File.new_build_filename(Environment.get_user_config_dir(), "recipebook");
 
             try {
                 if (!data_dir.query_exists(null)) {
