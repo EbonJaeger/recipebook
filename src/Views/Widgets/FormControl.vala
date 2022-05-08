@@ -16,8 +16,7 @@ namespace RecipeBook.View.Widgets {
                 description: description,
                 orientation: Gtk.Orientation.VERTICAL,
                 spacing: 4,
-                //  hexpand: true,
-                width_request: 300
+                hexpand: true
             );
         }
 

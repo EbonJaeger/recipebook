@@ -4,6 +4,7 @@ namespace RecipeBook.View {
     public class EditRecipe : AbstractView {
         public Recipe recipe { get; private set; }
 
+        private FormPictureChooser? picture_changer = null;
         private FormTextEntry? title_entry = null;
         private FormTextarea? description_entry = null;
         private FormTextEntry? prep_time_entry = null;
@@ -19,9 +20,11 @@ namespace RecipeBook.View {
                 margin_end = 16
             };
 
-            var upper_form_controls = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0) {
+            var upper_form_controls = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 12) {
                 hexpand = true
             };
+
+            this.picture_changer = new FormPictureChooser ("Recipe Picture", "Change the picture used for this recipe", recipe.image_path);
 
             var upper_form_control_group = new Gtk.Box (Gtk.Orientation.VERTICAL, 8);
 
@@ -35,6 +38,7 @@ namespace RecipeBook.View {
             upper_form_control_group.append (prep_time_entry);
             upper_form_control_group.append (cook_time_entry);
 
+            upper_form_controls.append (picture_changer);
             upper_form_controls.append (upper_form_control_group);
             form_box.append (upper_form_controls);
 
