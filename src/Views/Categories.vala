@@ -14,8 +14,8 @@ namespace RecipeBook.View {
         /**
          * Creates a new categories view.
          */
-        public Categories() {
-            base("categories", "Categories");
+        public Categories(Gtk.Window parent_window) {
+            base(parent_window, "categories", "Categories");
 
             this.db = Database.@get();
             this.model = new ListStore(typeof(Category));

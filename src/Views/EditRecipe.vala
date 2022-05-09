@@ -10,8 +10,8 @@ namespace RecipeBook.View {
         private FormTextEntry? prep_time_entry = null;
         private FormTextEntry? cook_time_entry = null;
 
-        public EditRecipe () {
-            base ("edit-recipe", "Editing");
+        public EditRecipe (Gtk.Window parent_window) {
+            base (parent_window, "edit-recipe", "Editing");
         }
     
         protected override void build_view () {
@@ -24,7 +24,7 @@ namespace RecipeBook.View {
                 hexpand = true
             };
 
-            this.picture_changer = new FormPictureChooser ("Recipe Picture", "Change the picture used for this recipe", recipe.image_path);
+            this.picture_changer = new FormPictureChooser (parent_window, "Recipe Picture", "Change the picture used for this recipe", recipe.image_path);
 
             var upper_form_control_group = new Gtk.Box (Gtk.Orientation.VERTICAL, 8);
 

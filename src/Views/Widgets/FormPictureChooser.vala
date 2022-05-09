@@ -6,15 +6,23 @@ namespace RecipeBook.View.Widgets {
     public class FormPictureChooser : FormControl {
         public string? image_path { get; construct set; }
 
+        public Gtk.Window? parent_window { get; construct; }
+
         private Gtk.Image? image;
         private Gtk.Button? dialog_open_button;
         private Gtk.FileChooserDialog? chooser_dialog;
 
-        public FormPictureChooser (string label, string description, string? image_path = null) {
-            base (label, description);
-            this.image_path = image_path;
-            this.hexpand = false;
-            this.valign = Gtk.Align.START;
+        public FormPictureChooser (Gtk.Window parent_window, string label, string description, string? image_path = null) {
+            Object (
+                parent_window: parent_window,
+                label_text: label,
+                description: description,
+                image_path: image_path,
+                orientation: Gtk.Orientation.VERTICAL,
+                spacing: 4,
+                hexpand: false,
+                valign: Gtk.Align.START
+            );
         }
 
         construct {
@@ -42,7 +50,7 @@ namespace RecipeBook.View.Widgets {
             file_filter.add_pixbuf_formats ();
 
             // Create a file chooser dialog
-            this.chooser_dialog = new Gtk.FileChooserDialog (null, null, Gtk.FileChooserAction.OPEN, "Open", Gtk.ResponseType.ACCEPT, "Cancel", Gtk.ResponseType.CANCEL) {
+            this.chooser_dialog = new Gtk.FileChooserDialog ("Choose Picture", parent_window, Gtk.FileChooserAction.OPEN, "Open", Gtk.ResponseType.ACCEPT, "Cancel", Gtk.ResponseType.CANCEL) {
                 filter = file_filter,
                 select_multiple = false
             };

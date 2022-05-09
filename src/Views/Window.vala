@@ -60,11 +60,11 @@ namespace RecipeBook.View {
                 transition_type = Gtk.StackTransitionType.SLIDE_LEFT_RIGHT
             };
 
-            this.categories_view = new Categories();
+            this.categories_view = new Categories(this);
             this.breadcrumbs.append(categories_view);
-            var new_category_view = new NewCategory();
+            var new_category_view = new NewCategory(this);
 
-            this.edit_recipe_view = new EditRecipe();
+            this.edit_recipe_view = new EditRecipe(this);
 
             this.pages.add_named(categories_view, categories_view.id);
             this.pages.add_named(new_category_view, new_category_view.id);

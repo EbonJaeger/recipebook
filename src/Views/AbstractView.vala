@@ -7,13 +7,16 @@ namespace RecipeBook.View {
         public string id { get; construct; }
         /** The title of this view. */
         public string title { get; construct set; }
+        /** The parent window of this view. */
+        public Gtk.Window? parent_window { get; construct; }
 
-        protected AbstractView(string id, string title) {
+        protected AbstractView(Gtk.Window parent_window, string id, string title) {
             Object(
                 orientation: Gtk.Orientation.VERTICAL,
                 spacing: 0,
                 id: id,
-                title: title
+                title: title,
+                parent_window: parent_window
             );
         }
 
