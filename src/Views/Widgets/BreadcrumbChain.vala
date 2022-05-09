@@ -4,7 +4,8 @@ namespace RecipeBook.View.Widgets {
      * within the app.
      */
     public class BreadcrumbChain : Gtk.Box {
-        private GLib.List<Breadcrumb> crumbs;
+        private GLib.Queue<Breadcrumb> prev_crumbs;
+        private GLib.Queue<Breadcrumb> forward_crumbs;
 
         /**
          * Emitted when a breadcrumb element has been clicked, or
@@ -12,41 +13,41 @@ namespace RecipeBook.View.Widgets {
          *
          * Has the element's `id` as the paramater.
          */
-        public signal void navigation_changed(string id);
+        public signal void navigation_changed (string id);
 
         /**
          * Creates a new breadcrumb chain widget.
          */
-        public BreadcrumbChain() {
-            Object(orientation: Gtk.Orientation.HORIZONTAL, spacing: 0);
+        public BreadcrumbChain () {
+            Object (orientation: Gtk.Orientation.HORIZONTAL, spacing: 0);
         }
 
         construct {
-            crumbs = new GLib.List<Breadcrumb>();
+            prev_crumbs = new GLib.Queue<Breadcrumb> ();
+            forward_crumbs = new GLib.Queue<Breadcrumb> ();
         }
 
         /**
          * Append a new breadcrumb to the trail from the given `AbstractView`.
          */
-        public new void append(AbstractView view) {
-            foreach (var crumb in this.crumbs) {
-                crumb.dim();
-            }
-
-            var breadcrumb = new Breadcrumb(view);
+        public new void append (AbstractView view) {
+            var breadcrumb = new Breadcrumb (view);
             breadcrumb.clicked.connect(() => {
-                this.go_back_until(breadcrumb.id);
+                this.go_back_until (breadcrumb.id);
             });
 
             // Append a separator if there are previous elements
-            if (this.crumbs.length() > 0) {
-                var sep = new Gtk.Label("/");
-                sep.get_style_context().add_class("dim-label");
-                base.append(sep);
+            if (!prev_crumbs.is_empty ()) {
+                this.prev_crumbs.peek_tail ().dim ();
+
+                var sep = new Gtk.Label ("/");
+                sep.get_style_context ().add_class ("dim-label");
+                base.append (sep);
             }
 
-            base.append(breadcrumb);
-            this.crumbs.append(breadcrumb);
+            base.append (breadcrumb);
+            this.prev_crumbs.push_tail (breadcrumb);
+            this.forward_crumbs.clear ();
         }
 
         /**
@@ -55,43 +56,72 @@ namespace RecipeBook.View.Widgets {
          *
          * Emits a signal at the end to update the view.
          */
-        public void go_back_until(string id) {
+        public void go_back_until (string id) {
             // Don't emit a signal for clicking the last element
             // since that's the current view being displayed.
-            if (this.crumbs.last().data.id == id) {
+            if (prev_crumbs.peek_tail ().id == id) {
                 return;
             }
 
             // Go back until we're at the element
-            while(go_previous() != id) {}
+            while (go_previous () != id) {}
 
             // Emit our signal to update the view
-            this.navigation_changed(id);
+            this.navigation_changed (id);
+        }
+
+        /**
+         * Go forward in the history once, re-adding the breadcrumb
+         * to the display, and returning the `id` of the new last
+         * element.
+         */
+        public string go_forward () {
+            this.prev_crumbs.peek_tail ().dim ();
+
+            var item = forward_crumbs.pop_head ();
+            this.prev_crumbs.push_tail (item);
+
+            var sep = new Gtk.Label ("/");
+            sep.get_style_context ().add_class ("dim-label");
+            base.append (sep);
+            base.append (item);
+
+            return item.view.id;
         }
 
         /**
          * Go back one crumb in the trail, removing the last element
          * and returning the `id` of the new last element.
          */
-        public string go_previous() {
-            this.remove_last();
+        public string go_previous () {
+            var old_last = this.prev_crumbs.pop_tail ();
+            this.forward_crumbs.push_head (old_last);
 
-            var last = this.crumbs.last().data;
-            last.undim();
+            var last = prev_crumbs.peek_tail ();
+            last.undim ();
+
+            this.remove_last ();
+
             return last.view.id;
         }
 
         /**
          * Returns whether or not there is only one breadcrumb in the trail.
          */
-        public bool is_at_last() {
-            return this.crumbs.length() == 1;
+        public bool is_at_last () {
+            return this.prev_crumbs.get_length () == 1;
         }
 
-        private void remove_last() {
-            base.remove(base.get_last_child());
-            base.remove(base.get_last_child()); // Remove the separator which is now last
-            this.crumbs.remove(crumbs.last().data);
+        /**
+         * Returns whether or not there is any forward history stored.
+         */
+        public bool has_forward_history () {
+            return !this.forward_crumbs.is_empty ();
+        }
+
+        private void remove_last () {
+            base.remove (base.get_last_child ());
+            base.remove (base.get_last_child ()); // Remove the separator which is now last
         }
     }
 }

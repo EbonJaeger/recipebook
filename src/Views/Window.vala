@@ -2,6 +2,7 @@ namespace RecipeBook.View {
     public class Window : Gtk.ApplicationWindow {
         private Gtk.HeaderBar header;
         private Gtk.Button go_back_button;
+        private Gtk.Button go_forward_button;
         private Gtk.Button home_button;
         private Gtk.Stack pages;
 
@@ -35,6 +36,13 @@ namespace RecipeBook.View {
                 sensitive = false
             };
             this.header.pack_start(go_back_button);
+
+            this.go_forward_button = new Gtk.Button() {
+                icon_name = "go-next-symbolic",
+                tooltip_text = "Go forward",
+                sensitive = false
+            };
+            this.header.pack_start(go_forward_button);
 
             this.home_button = new Gtk.Button() {
                 icon_name = "go-home-symbolic",
@@ -82,13 +90,27 @@ namespace RecipeBook.View {
                 this.pages.set_visible_child_name(breadcrumbs.go_previous());
                 this.set_title();
 
+                this.go_forward_button.sensitive = true;
                 if (breadcrumbs.is_at_last()) {
                     this.go_back_button.sensitive = false;
                 }
             });
 
+            this.go_forward_button.clicked.connect(() => {
+                this.pages.set_visible_child_name(breadcrumbs.go_forward());
+                this.set_title();
+
+                this.go_back_button.sensitive = true;
+                if (!breadcrumbs.has_forward_history()) {
+                    this.go_forward_button.sensitive = false;
+                }
+            });
+
             this.home_button.clicked.connect(() => {
                 this.breadcrumbs.go_back_until(categories_view.id);
+                if (breadcrumbs.has_forward_history()) {
+                    this.go_forward_button.sensitive = true;
+                }
             });
 
             this.breadcrumbs.navigation_changed.connect((id) => {
@@ -127,6 +149,7 @@ namespace RecipeBook.View {
             this.pages.set_visible_child_name(category.id);
             this.set_title();
             this.breadcrumbs.append(pages.get_visible_child() as AbstractView);
+            this.go_forward_button.sensitive = false;
         }
 
         /**
@@ -152,6 +175,7 @@ namespace RecipeBook.View {
             this.pages.set_visible_child(view);
             this.set_title();
             this.breadcrumbs.append(view);
+            this.go_forward_button.sensitive = false;
         }
 
         /**
