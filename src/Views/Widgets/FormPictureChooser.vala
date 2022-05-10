@@ -156,19 +156,32 @@ namespace RecipeBook.View.Widgets {
             debug ("removing recipe image");
 
             this.image.set_from_icon_name ("folder-pictures-symbolic");
+            this.remove_picture_button.sensitive = false;
+            this.image_path = "";
 
-            // TODO: Check if this image is in use in another recipe first
-            var file = File.new_for_path (image_path);
+            // TODO: Remove the image from this recipe in the database.
+            //       We have to do this to make the count unambiguous.
+            var db = Database.@get ();
+
+            // Check if this image is in use in another recipe first
+            int image_uses = 0;
+            try {
+                image_uses = db.count_image_uses (Path.get_basename (image_path));
+            } catch (IOError e) {
+                critical ("error checking if image is in use: %s", e.message);
+            }
+
+            if (image_uses > 0) {
+                return;
+            }
 
             // Delete the file
+            var file = File.new_for_path (image_path);
             try {
                 file.delete (null);
             } catch (Error e) {
                 warning ("unable to delete recipe image '%s': %s", image_path, e.message);
             }
-
-            this.remove_picture_button.sensitive = false;
-            this.image_path = "";
         }
 
         private void handle_file_accepted(File? file) {

@@ -64,6 +64,28 @@ namespace RecipeBook {
         }
 
         /**
+         * Count the number of times that an `image` is used.
+         */
+        public int count_image_uses (string image) throws IOError {
+            Sqlite.Statement stmt;
+            var sql = "SELECT COUNT(id) FROM recipes WHERE picture = $NAME;";
+            int ret = db.prepare_v2 (sql, sql.length, out stmt);
+
+            if (ret != Sqlite.OK) {
+                throw new GLib.IOError.FAILED ("error counting images: code: %d: %s", ret, db.errmsg ());
+            }
+
+            // Bind the statement params
+            int parameter_pos = stmt.bind_parameter_index ("$NAME");
+            assert (parameter_pos > 0);
+            stmt.bind_text (parameter_pos, image);
+
+            // Execute the query
+            stmt.step ();
+            return stmt.column_int(0);
+        }
+
+        /**
          * Re-populates a `ListStore` with all of the current categories in the
          * database.
          */
