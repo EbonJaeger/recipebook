@@ -13,6 +13,7 @@ namespace RecipeBook.View.Widgets {
         private Gtk.Label? label;
         private Gtk.Image? image;
         private Gtk.Button? dialog_open_button;
+        private Gtk.Button? remove_picture_button;
         private Gtk.FileChooserDialog? chooser_dialog;
 
         public FormPictureChooser (Gtk.Window parent_window, string label, string? image_path = null) {
@@ -74,16 +75,30 @@ namespace RecipeBook.View.Widgets {
 
             this.chooser_dialog.response.connect (on_dialog_response);
 
+            var button_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 4) {
+                hexpand = true
+            };
+
             // Create a button to open the file dialog
             this.dialog_open_button = new Gtk.Button.with_label ("Open file") {
-                halign = Gtk.Align.START,
-                hexpand = false
+                //  halign = Gtk.Align.FILL,
+                hexpand = true
             };
             this.dialog_open_button.clicked.connect (on_open_button_clicked);
 
+            // Create a button to remove the current picture
+            this.remove_picture_button = new Gtk.Button.with_label ("Remove image") {
+                hexpand = true,
+                sensitive = image_path != null && image_path != ""
+            };
+            this.remove_picture_button.clicked.connect (on_image_removed);
+
             // Pack everything together
+            button_box.append (dialog_open_button);
+            button_box.append (remove_picture_button);
+
             container.append (image);
-            container.append (dialog_open_button);
+            container.append (button_box);
             this.append (container);
         }
 
@@ -130,6 +145,32 @@ namespace RecipeBook.View.Widgets {
             }
         }
 
+        /**
+         * Handles when the button to remove this recipe's image is clicked.
+         *
+         * If the image isn't in use by any other recipes, the file in our
+         * config directory will be deleted.
+         */
+        private void on_image_removed () {
+            assert (image_path != null);
+            debug ("removing recipe image");
+
+            this.image.set_from_icon_name ("folder-pictures-symbolic");
+
+            // TODO: Check if this image is in use in another recipe first
+            var file = File.new_for_path (image_path);
+
+            // Delete the file
+            try {
+                file.delete (null);
+            } catch (Error e) {
+                warning ("unable to delete recipe image '%s': %s", image_path, e.message);
+            }
+
+            this.remove_picture_button.sensitive = false;
+            this.image_path = "";
+        }
+
         private void handle_file_accepted(File? file) {
             assert (file != null);
             debug ("file selected: '%s'", file.get_path ());
@@ -154,6 +195,7 @@ namespace RecipeBook.View.Widgets {
             this.image_path = path;
             this.chooser_dialog.hide ();
             this.dialog_open_button.sensitive = true;
+            this.remove_picture_button.sensitive = true;
         }
 
         /**

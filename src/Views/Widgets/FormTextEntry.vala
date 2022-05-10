@@ -40,7 +40,7 @@ namespace RecipeBook.View.Widgets {
             this.entry = new Gtk.Entry () {
                 placeholder_text = entry_placeholder
             };
-            debug ("is value null? %s", value == null ? "true" : "false");
+
             this.bind_property ("value", entry.buffer, "text", BindingFlags.BIDIRECTIONAL);
             this.append (entry);
         }
