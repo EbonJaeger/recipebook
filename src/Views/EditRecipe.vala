@@ -10,7 +10,15 @@ namespace RecipeBook.View {
         private FormTextEntry? prep_time_entry = null;
         private FormTextEntry? cook_time_entry = null;
 
-        public EditRecipe (Gtk.Window parent_window) {
+        private bool is_bound = false;
+
+        private Binding? title_bind = null;
+        private Binding? description_bind = null;
+        private Binding? image_path_bind = null;
+        private Binding? prep_time_bind = null;
+        private Binding? cook_time_bind = null;
+
+        public EditRecipe (Window parent_window) {
             base (parent_window, "edit-recipe", "Editing");
         }
     
@@ -25,6 +33,8 @@ namespace RecipeBook.View {
             };
 
             this.picture_changer = new FormPictureChooser (parent_window, "Recipe Picture", null);
+            this.picture_changer.image_accepted.connect (on_image_accepted);
+            this.picture_changer.image_removed.connect (on_image_removed);
 
             var upper_form_control_group = new Gtk.Box (Gtk.Orientation.VERTICAL, 8);
 
@@ -72,6 +82,76 @@ namespace RecipeBook.View {
                     critical ("error setting form control picture: %s", e.message);
                 }
             }
+
+            // Rebind all of the properties
+            this.unbind_all ();
+            this.title_bind = title_entry.bind_property ("value", recipe, "title", BindingFlags.DEFAULT);
+            this.description_bind = description_entry.bind_property ("value", recipe, "description", BindingFlags.DEFAULT);
+            this.image_path_bind = picture_changer.bind_property ("image-path", recipe, "image-path", BindingFlags.DEFAULT);
+            this.prep_time_bind = prep_time_entry.bind_property ("value", recipe, "prep-time", BindingFlags.DEFAULT);
+            this.cook_time_bind = cook_time_entry.bind_property ("value", recipe, "cook-time", BindingFlags.DEFAULT);
+            this.is_bound = true;
+        }
+
+        private void on_image_accepted(string image_path) {
+            var file = File.new_for_path (image_path);
+
+            // Copy the image to our local config dir
+            string? path = null;
+            try {
+                path = parent_window.copy_image_to_conf (file);
+                // Set the prop on the changer, since that'll get
+                // propagated to the recipe via the binding.
+                this.picture_changer.set_new_image_path (path);
+            } catch (Error e) {
+                critical ("error setting new image: %s", e.message);
+            }
+        }
+
+        /**
+         * Handles when the button to remove this recipe's image is clicked.
+         *
+         * If the image isn't in use by any other recipes, the file in our
+         * config directory will be deleted.
+         */
+        private void on_image_removed (string image_path) {
+            // TODO: Remove the image from this recipe in the database.
+            //       We have to do this to make the count unambiguous.
+            var db = Database.@get ();
+
+            // Check if this image is in use in another recipe first
+            int image_uses = 0;
+            try {
+                image_uses = db.count_image_uses (Path.get_basename (image_path));
+            } catch (IOError e) {
+                critical ("error checking if image is in use: %s", e.message);
+            }
+
+            if (image_uses > 0) {
+                return;
+            }
+
+            // Delete the file
+            var file = File.new_for_path (image_path);
+            try {
+                file.delete (null);
+            } catch (Error e) {
+                warning ("unable to delete recipe image '%s': %s", image_path, e.message);
+            }
+        }
+
+        private void unbind_all() {
+            if (!is_bound) {
+                return;
+            }
+
+            title_bind.unbind ();
+            description_bind.unbind ();
+            image_path_bind.unbind ();
+            prep_time_bind.unbind ();
+            cook_time_bind.unbind ();
+
+            this.is_bound = false;
         }
     }
 }

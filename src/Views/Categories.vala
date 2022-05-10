@@ -14,7 +14,7 @@ namespace RecipeBook.View {
         /**
          * Creates a new categories view.
          */
-        public Categories(Gtk.Window parent_window) {
+        public Categories(Window parent_window) {
             base(parent_window, "categories", "Categories");
 
             this.db = Database.@get();

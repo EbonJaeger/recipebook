@@ -126,6 +126,24 @@ namespace RecipeBook.View {
         }
 
         /**
+         * Copies a `file` to the application's config directory.
+         *
+         * If the file already exists, it will be overwritten.
+         */
+        public string? copy_image_to_conf(File file) throws Error {
+            var out_file = File.new_build_filename (Environment.get_user_config_dir (), "recipebook", "images", file.get_basename ());
+
+            // Make sure our parent dir exists
+            if (!out_file.get_parent ().query_exists (null)) {
+                out_file.get_parent ().make_directory (null);
+            }
+
+            var copy_flags = FileCopyFlags.OVERWRITE;
+            file.copy (out_file, copy_flags, null, null);
+            return out_file.get_path ();
+        }
+
+        /**
          * Handles when a category button has been clicked.
          *
          * It sets the visible page in the stack and updates the title.

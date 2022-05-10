@@ -1,7 +1,7 @@
 namespace RecipeBook.View {
     public class NewCategory : AbstractView {
 
-        public NewCategory(Gtk.Window parent_window) {
+        public NewCategory(Window parent_window) {
             base(parent_window, "add-category", "New Category");
         }
 

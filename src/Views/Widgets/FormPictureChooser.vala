@@ -16,6 +16,9 @@ namespace RecipeBook.View.Widgets {
         private Gtk.Button? remove_picture_button;
         private Gtk.FileChooserDialog? chooser_dialog;
 
+        public signal void image_accepted (string image_path);
+        public signal void image_removed (string image_path);
+
         public FormPictureChooser (Gtk.Window parent_window, string label, string? image_path = null) {
             Object (
                 parent_window: parent_window,
@@ -91,7 +94,14 @@ namespace RecipeBook.View.Widgets {
                 hexpand = true,
                 sensitive = image_path != null && image_path != ""
             };
-            this.remove_picture_button.clicked.connect (on_image_removed);
+            this.remove_picture_button.clicked.connect (() => {
+                debug ("removing recipe image");
+                this.remove_picture_button.sensitive = false;
+                var image_path_old = image_path.dup ();
+                this.image_path = "";
+                this.image.set_from_icon_name ("folder-pictures-symbolic");
+                this.image_removed (image_path_old);
+            });
 
             // Pack everything together
             button_box.append (dialog_open_button);
@@ -103,7 +113,7 @@ namespace RecipeBook.View.Widgets {
         }
 
         public void set_new_image_path (string path) throws Error {
-            this.image_path = image_path;
+            this.image_path = path;
             this.set_image_from_file (path);
         }
 
@@ -131,7 +141,14 @@ namespace RecipeBook.View.Widgets {
             switch (id) {
                 case Gtk.ResponseType.ACCEPT:
                     var file = chooser_dialog.get_file ();
-                    this.handle_file_accepted (file);
+                    assert (file != null);
+                    debug ("file selected: '%s'", file.get_path ());
+
+                    this.image_accepted (file.get_path ());
+
+                    this.chooser_dialog.hide ();
+                    this.dialog_open_button.sensitive = true;
+                    this.remove_picture_button.sensitive = true;
                     break;
                 case Gtk.ResponseType.CLOSE:
                 case Gtk.ResponseType.CANCEL:
@@ -146,96 +163,12 @@ namespace RecipeBook.View.Widgets {
         }
 
         /**
-         * Handles when the button to remove this recipe's image is clicked.
-         *
-         * If the image isn't in use by any other recipes, the file in our
-         * config directory will be deleted.
-         */
-        private void on_image_removed () {
-            assert (image_path != null);
-            debug ("removing recipe image");
-
-            this.image.set_from_icon_name ("folder-pictures-symbolic");
-            this.remove_picture_button.sensitive = false;
-            this.image_path = "";
-
-            // TODO: Remove the image from this recipe in the database.
-            //       We have to do this to make the count unambiguous.
-            var db = Database.@get ();
-
-            // Check if this image is in use in another recipe first
-            int image_uses = 0;
-            try {
-                image_uses = db.count_image_uses (Path.get_basename (image_path));
-            } catch (IOError e) {
-                critical ("error checking if image is in use: %s", e.message);
-            }
-
-            if (image_uses > 0) {
-                return;
-            }
-
-            // Delete the file
-            var file = File.new_for_path (image_path);
-            try {
-                file.delete (null);
-            } catch (Error e) {
-                warning ("unable to delete recipe image '%s': %s", image_path, e.message);
-            }
-        }
-
-        private void handle_file_accepted(File? file) {
-            assert (file != null);
-            debug ("file selected: '%s'", file.get_path ());
-
-            // Copy the image to our local config dir
-            string? path = null;
-            try {
-                path = copy_image_to_conf (file);
-            } catch (Error e) {
-                critical ("error copying file from '%s': %s", file.get_path (), e.message);
-            }
-
-            assert (path != null);
-
-            // Set our new image in the UI
-            try {
-                this.set_image_from_file (path);
-            } catch (Error e) {
-                critical ("error getting pixbuf from '%s': %s", file.get_path (), e.message);
-            }
-
-            this.image_path = path;
-            this.chooser_dialog.hide ();
-            this.dialog_open_button.sensitive = true;
-            this.remove_picture_button.sensitive = true;
-        }
-
-        /**
-         * Copies a `file` to the application's config directory.
-         *
-         * If the file already exists, it will be overwritten.
-         */
-        private string? copy_image_to_conf(File file) throws Error {
-            var out_file = File.new_build_filename (Environment.get_user_config_dir (), "recipebook", "images", file.get_basename ());
-
-            // Make sure our parent dir exists
-            if (!out_file.get_parent ().query_exists (null)) {
-                out_file.get_parent ().make_directory (null);
-            }
-
-            var copy_flags = FileCopyFlags.ALL_METADATA|FileCopyFlags.OVERWRITE;
-            file.copy (out_file, copy_flags, null, null);
-            return out_file.get_path ();
-        }
-
-        /**
          * Set the image in the UI from a file at the given `path`.
          *
          * The image will be scaled to 256x256, preserving the
          * aspect ratio.
          */
-        private void set_image_from_file (string path) throws Error {
+        public void set_image_from_file (string path) throws Error {
             var pixbuf = new Gdk.Pixbuf.from_file_at_scale (path, 256, 256, true);
             this.image.set_from_pixbuf (pixbuf);
         }

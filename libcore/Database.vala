@@ -197,6 +197,23 @@ namespace RecipeBook {
             return recipes;
         }
 
+        public void remove_image_from_recipe (Recipe recipe) throws IOError {
+            Sqlite.Statement stmt;
+            var sql = "UPDATE recipes SET picture = '' WHERE id = $ID;";
+            
+            int ret = db.prepare_v2 (sql, sql.length, out stmt);
+            if (ret != Sqlite.OK) {
+                throw new GLib.IOError.FAILED ("error updating image for recipe '%s': code: %d: %s", recipe.title, ret, db.errmsg ());
+            }
+
+            // Bind the sql parameters
+            int parameter_pos = stmt.bind_parameter_index ("$ID");
+            assert(parameter_pos > 0);
+            stmt.bind_int (parameter_pos, recipe.id);
+
+            stmt.step ();
+        }
+
         private bool initialize_tables() {
             var query = """
                 CREATE TABLE IF NOT EXISTS categories (
