@@ -3,20 +3,22 @@ namespace RecipeBook.View.Widgets {
      * A widget that shows a picture (if set) and allows the user
      * to select a new picture to change it.
      */
-    public class FormPictureChooser : FormControl {
+    public class FormPictureChooser : Gtk.Box {
         public string? image_path { get; construct set; }
 
         public Gtk.Window? parent_window { get; construct; }
 
+        public string? label_text { get; construct set; }
+
+        private Gtk.Label? label;
         private Gtk.Image? image;
         private Gtk.Button? dialog_open_button;
         private Gtk.FileChooserDialog? chooser_dialog;
 
-        public FormPictureChooser (Gtk.Window parent_window, string label, string description, string? image_path = null) {
+        public FormPictureChooser (Gtk.Window parent_window, string label, string? image_path = null) {
             Object (
                 parent_window: parent_window,
                 label_text: label,
-                description: description,
                 image_path: image_path,
                 orientation: Gtk.Orientation.VERTICAL,
                 spacing: 4,
@@ -26,6 +28,13 @@ namespace RecipeBook.View.Widgets {
         }
 
         construct {
+            this.label = new Gtk.Label ("<big>%s</big>".printf (label_text)) {
+                use_markup = true,
+                halign = Gtk.Align.START
+            };
+
+            this.append (label);
+
             // Create a container to hold all of our other widgets
             var container = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
 
@@ -75,14 +84,12 @@ namespace RecipeBook.View.Widgets {
             // Pack everything together
             container.append (image);
             container.append (dialog_open_button);
-            this.set_form_child (container);
+            this.append (container);
         }
 
-        public override string get_value () {
-            return this.image_path;
-        }
-
-        protected override void on_widget_clicked (int n_press, double x, double y) {
+        public void set_new_image_path (string path) throws Error {
+            this.image_path = image_path;
+            this.set_image_from_file (path);
         }
 
         private void on_open_button_clicked() {

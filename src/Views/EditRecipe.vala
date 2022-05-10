@@ -2,7 +2,7 @@ using RecipeBook.View.Widgets;
 
 namespace RecipeBook.View {
     public class EditRecipe : AbstractView {
-        public Recipe recipe { get; private set; }
+        public Recipe? recipe { get; private set; default = null; }
 
         private FormPictureChooser? picture_changer = null;
         private FormTextEntry? title_entry = null;
@@ -24,7 +24,7 @@ namespace RecipeBook.View {
                 hexpand = true
             };
 
-            this.picture_changer = new FormPictureChooser (parent_window, "Recipe Picture", "Change the picture used for this recipe", recipe.image_path);
+            this.picture_changer = new FormPictureChooser (parent_window, "Recipe Picture", null);
 
             var upper_form_control_group = new Gtk.Box (Gtk.Orientation.VERTICAL, 8);
 
@@ -55,7 +55,22 @@ namespace RecipeBook.View {
             this.recipe = recipe;
 
             if (recipe.title != "") {
-                this.title = "Editing - %s".printf (recipe.title);
+                this.title = "Editing %s".printf (recipe.title);
+            } else {
+                this.title = "Editing New Recipe";
+            }
+
+            this.title_entry.value = recipe.title;
+            this.description_entry.value = recipe.description;
+            this.prep_time_entry.value = recipe.prep_time;
+            this.cook_time_entry.value = recipe.cook_time;
+
+            if (recipe.image_path != null || recipe.image_path != "") {
+                try {
+                    this.picture_changer.set_new_image_path (recipe.image_path);
+                } catch (Error e) {
+                    critical ("error setting form control picture: %s", e.message);
+                }
             }
         }
     }

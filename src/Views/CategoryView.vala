@@ -64,7 +64,7 @@ namespace RecipeBook.View {
 
             var add_recipe_button = new Widgets.RecipeButton("New Recipe", "Add a new recipe to this category.", "list-add-symbolic");
             add_recipe_button.clicked.connect(() => {
-                var recipe = new Recipe(category, 0, "New Recipe", "", "", "", "");
+                var recipe = new Recipe(category, 0, "", "", "", "", "");
                 this.recipe_button_clicked("edit-recipe", recipe);
             });
             this.recipes_box.append(add_recipe_button);

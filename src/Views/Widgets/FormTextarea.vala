@@ -3,14 +3,39 @@ namespace RecipeBook.View.Widgets {
      * A widget containing a larger text area for multi-line
      * text input.
      */
-    public class FormTextarea : FormControl {
+    public class FormTextarea : Gtk.Box {
+        public string value { get; construct set; default = ""; }
+
+        public string? description { get; construct set; }
+        public string? label_text { get; construct set; }
+
+        private Gtk.Label? label = null;
         private Gtk.TextView? entry = null;
 
         public FormTextarea (string label, string description) {
-            base (label, description);
+            Object (
+                value: "",
+                label_text: label,
+                description: description,
+                orientation: Gtk.Orientation.VERTICAL,
+                spacing: 4,
+                hexpand: true
+            );
         }
 
         construct {
+            this.label = new Gtk.Label ("<big>%s</big>".printf (label_text)) {
+                use_markup = true,
+                halign = Gtk.Align.START
+            };
+
+            this.tooltip_text = description;
+            this.append (label);
+
+            var controller = new Gtk.GestureClick ();
+            controller.pressed.connect (on_widget_clicked);
+            this.add_controller (controller);
+
             var buffer = new Gtk.TextBuffer (null) {
                 enable_undo = true
             };
@@ -34,17 +59,13 @@ namespace RecipeBook.View.Widgets {
                 wrap_mode = Gtk.WrapMode.WORD_CHAR,
             };
 
+            this.bind_property ("value", entry.buffer, "text", BindingFlags.BIDIRECTIONAL);
+
             scroller.set_child (entry);
-            this.set_form_child (scroller);
+            this.append (scroller);
         }
 
-        public override string get_value () {
-            assert (entry != null);
-
-            return this.entry.buffer.text;
-        }
-
-        protected override void on_widget_clicked(int n_press, double x, double y) {
+        private void on_widget_clicked(int n_press, double x, double y) {
             assert (entry != null);
 
             if (x < get_width () && y < get_height ()) {

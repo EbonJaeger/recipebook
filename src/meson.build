@@ -9,7 +9,6 @@ recipebook_sources = [
     'Views/Widgets/Breadcrumb.vala',
     'Views/Widgets/BreadcrumbChain.vala',
     'Views/Widgets/CategoryButton.vala',
-    'Views/Widgets/FormControl.vala',
     'Views/Widgets/FormPictureChooser.vala',
     'Views/Widgets/FormTextEntry.vala',
     'Views/Widgets/FormTextarea.vala',
