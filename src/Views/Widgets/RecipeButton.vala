@@ -12,8 +12,8 @@ namespace RecipeBook.View.Widgets {
         private Gtk.Label name_label;
         private Gtk.Label description_label;
 
-        public RecipeButton(string name, string description, string? image_name) {
-            Object(
+        public RecipeButton (string name, string description, string? image_name) {
+            Object (
                 image_name: image_name ?? "camera-photo-symbolic",
                 recipe_name: name,
                 description: description,
@@ -24,13 +24,13 @@ namespace RecipeBook.View.Widgets {
         }
 
         construct {
-            this.build_widget();
+            this.build_widget ();
         }
 
-        private void build_widget() {
-            var container = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
+        private void build_widget () {
+            var container = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
 
-            this.image = new Gtk.Image.from_icon_name(image_name) {
+            this.image = new Gtk.Image () {
                 icon_size = Gtk.IconSize.LARGE,
                 margin_start = 16,
                 margin_end = 16,
@@ -38,31 +38,37 @@ namespace RecipeBook.View.Widgets {
                 height_request = 64
             };
 
-            var text_box = new Gtk.Box(Gtk.Orientation.VERTICAL, 12) {
+            if (image_name.has_prefix ("/")) {
+                this.image.set_from_file (image_name);
+            } else {
+                this.image.set_from_icon_name (image_name ?? "camera-photo-symbolic");
+            }
+
+            var text_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 12) {
                 halign = Gtk.Align.START,
                 hexpand = true,
                 margin_top = 16
             };
 
-            this.name_label = new Gtk.Label("<big>%s</big>".printf(recipe_name)) {
+            this.name_label = new Gtk.Label ("<big>%s</big>".printf (recipe_name)) {
                 halign = Gtk.Align.START,
                 use_markup = true
             };
 
-            this.description_label = new Gtk.Label(description) {
+            this.description_label = new Gtk.Label (description) {
                 ellipsize = Pango.EllipsizeMode.END,
                 wrap_mode = Pango.WrapMode.WORD_CHAR,
                 lines = 2,
                 max_width_chars = 48
             };
-            this.description_label.get_style_context().add_class("dim-label");
+            this.description_label.get_style_context ().add_class ("dim-label");
 
-            text_box.append(name_label);
-            text_box.append(description_label);
+            text_box.append (name_label);
+            text_box.append (description_label);
 
-            container.append(image);
-            container.append(text_box);
-            this.set_child(container);
+            container.append (image);
+            container.append (text_box);
+            this.set_child (container);
         }
     }
 }

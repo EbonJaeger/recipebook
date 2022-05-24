@@ -126,6 +126,66 @@ namespace RecipeBook {
         }
 
         /**
+         * Get all of the recipes for a `category` from the database.
+         */
+        public void get_recipes_for_category (Category category, ListStore store) throws IOError {
+            store.remove_all ();
+
+            Sqlite.Statement stmt;
+            var sql = """
+                SELECT id,title,description,picture,prep_time,cook_time
+                FROM recipes 
+                WHERE category = $ID;
+            """;
+            int ret = db.prepare_v2 (sql, sql.length, out stmt);
+
+            if (ret != Sqlite.OK) {
+                throw new GLib.IOError.FAILED ("error retrieving recipes in category '%s': code: %d: %s", category.name, ret, db.errmsg ());
+            }
+
+            var pos = stmt.bind_parameter_index ("$ID");
+            assert (pos > 0);
+            stmt.bind_text (pos, category.id);
+
+            // Execute the statement and get the data
+            int cols = stmt.column_count ();
+            while (stmt.step () == Sqlite.ROW) {
+                int id = -1;
+                string title = null, description = null;
+                string? image_path = null, prep_time = null, cook_time = null;
+
+                for (int i = 0; i < cols; i++) {
+                    switch (i) {
+                        case RecipeColumns.ID:
+                            id = stmt.column_int (i);
+                            break;
+                        case RecipeColumns.TITLE:
+                            title = stmt.column_text (i);
+                            break;
+                        case RecipeColumns.DESCRIPTION:
+                            description = stmt.column_text (i);
+                            break;
+                        case RecipeColumns.PICTURE:
+                            image_path = stmt.column_text (i);
+                            break;
+                        case RecipeColumns.PREP_TIME:
+                            prep_time = stmt.column_text (i);
+                            break;
+                        case RecipeColumns.COOK_TIME:
+                            cook_time = stmt.column_text (i);
+                            break;
+                        default:
+                            critical ("Unknown column index: %d", i);
+                            continue;
+                    }
+                }
+
+                var recipe = new Recipe (category, id, title, description, image_path, prep_time, cook_time);
+                store.append (recipe);
+            }
+        }
+
+        /**
          * Re-populates a `ListStore` with all of the current categories in the
          * database.
          */
@@ -176,67 +236,6 @@ namespace RecipeBook {
             }
         }
 
-        public Gee.LinkedList<Recipe> rebuild_recipes(Category category) throws IOError {
-            Gee.LinkedList<Recipe> recipes = new Gee.LinkedList<Recipe>();
-
-            // Create the statement
-            Sqlite.Statement stmt;
-            var sql = """
-                SELECT id,title,description,picture,prep_time,cook_time
-                FROM recipes
-                WHERE category = $CATEGORY;
-            """;
-            int ret = db.prepare_v2(sql, sql.length, out stmt);
-            if (ret != Sqlite.OK) {
-                throw new GLib.IOError.FAILED("error getting recipes in category '%s': code: %d: %s", category.name, ret, db.errmsg());
-            }
-
-            // Bind the sql parameters
-            int parameter_pos = stmt.bind_parameter_index("$CATEGORY");
-            assert(parameter_pos > 0);
-            stmt.bind_text(parameter_pos, category.id);
-
-            // Execute the query and get the data
-            int cols = stmt.column_count();
-            while (stmt.step() == Sqlite.ROW) {
-                int id = 0;
-                string title = null, description = null;
-                string? image_path = null, prep_time = null, cook_time = null;
-
-                for (int i = 0; i < cols; i++) {
-                    switch (i) {
-                        case RecipeColumns.ID:
-                            id = stmt.column_int(i);
-                            break;
-                        case RecipeColumns.TITLE:
-                            title = stmt.column_text(i);
-                            break;
-                        case RecipeColumns.DESCRIPTION:
-                            description = stmt.column_text(i);
-                            break;
-                        case RecipeColumns.PICTURE:
-                            image_path = stmt.column_text(i);
-                            break;
-                        case RecipeColumns.PREP_TIME:
-                            prep_time = stmt.column_text(i);
-                            break;
-                        case RecipeColumns.COOK_TIME:
-                            cook_time = stmt.column_text(i);
-                            break;
-                        default:
-                            critical("Unknown column index: %d", i);
-                            continue;
-                    }
-                }
-
-                // TODO: Get the ingredients and steps
-
-                recipes.add(new Recipe(category, id, title, description, image_path, prep_time, cook_time));
-            }
-
-            return recipes;
-        }
-
         public void remove_image_from_recipe (Recipe recipe) throws IOError {
             Sqlite.Statement stmt;
             var sql = "UPDATE recipes SET picture = '' WHERE id = $ID;";
@@ -265,7 +264,7 @@ namespace RecipeBook {
 
                 INSERT OR IGNORE INTO categories (id, name, description, picture) 
                 VALUES(
-                    'unorganized', 'Unorganized', 'Recipes that don''t fit in any other category', 'document-new-symbolic'
+                    'unorganized', 'Unorganized', 'Recipes that don''t fit in any other category', 'document-open-symbolic'
                 );
 
                 INSERT OR IGNORE INTO categories (id, name, description, picture) 
@@ -277,11 +276,16 @@ namespace RecipeBook {
                     id INTEGER PRIMARY KEY,
                     category TEXT,
                     picture TEXT,
-                    title TEXT NOT NULL,
+                    title TEXT UNIQUE NOT NULL,
                     description TEXT NOT NULL,
-                    prep_time TEXT NOT NULL,
-                    cook_time TEXT NOT NULL,
+                    prep_time TEXT,
+                    cook_time TEXT,
                     FOREIGN KEY(category) REFERENCES categories(id)
+                );
+
+                INSERT OR IGNORE INTO recipes (category, picture, title, description)
+                VALUES(
+                    'unorganized', 'list-add-symbolic', 'New Recipe', 'Add a new recipe to this category.'
                 );
 
                 CREATE TABLE IF NOT EXISTS ingredient_sections (

@@ -174,22 +174,28 @@ namespace RecipeBook.View {
          * this function will create one and then set it as the
          * visible page in the stack.
          */
-        private void on_category_button_clicked(Category category) {
-            debug("category button clicked with ID '%s'", category.id);
+        private void on_category_button_clicked (Category category) {
+            debug ("category button clicked with ID '%s'", category.id);
             this.go_back_button.sensitive = true;
 
+            var page = pages.get_child_by_name (category.id);
+            var view = page as CategoryView;
+
             // Make sure we have a page to go to
-            if (pages.get_child_by_name(category.id) == null) {
-                debug("creating new category view for '%s'", category.id);
-                var view = new CategoryView(category);
-                view.recipe_button_clicked.connect(on_recipe_button_clicked);
-                this.pages.add_named(view, category.id);
+            if (view == null) {
+                debug ("creating new category view for '%s'", category.id);
+                view = new CategoryView (category);
+                view.recipe_button_clicked.connect (on_recipe_button_clicked);
+                this.pages.add_named (view, category.id);
             }
 
+            // Refresh the recipe list in the category view
+            view.refresh ();
+
             // Update the view
-            this.pages.set_visible_child_name(category.id);
-            this.set_title();
-            this.breadcrumbs.append(pages.get_visible_child() as AbstractView);
+            this.pages.set_visible_child_name (category.id);
+            this.set_title ();
+            this.breadcrumbs.append (pages.get_visible_child () as AbstractView);
             this.go_forward_button.sensitive = false;
         }
 

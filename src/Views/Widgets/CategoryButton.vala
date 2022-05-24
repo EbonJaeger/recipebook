@@ -12,8 +12,8 @@ namespace RecipeBook.View.Widgets {
         /**
          * Create a new CategoryButton from a `category` object.
          */
-        public CategoryButton(Category category) {
-            Object(
+        public CategoryButton (Category category) {
+            Object (
                 category: category,
                 width_request: 96,
                 height_request: 96
@@ -21,29 +21,35 @@ namespace RecipeBook.View.Widgets {
         }
 
         construct {
-            build_widget();
+            build_widget ();
         }
 
-        private void build_widget() {
-            var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 4);
+        private void build_widget () {
+            var box = new Gtk.Box (Gtk.Orientation.VERTICAL, 4);
 
-            this.image = new Gtk.Image.from_icon_name(category.image_path ?? "document-open-symbolic") {
+            this.image = new Gtk.Image () {
                 icon_size = Gtk.IconSize.LARGE,
                 margin_top = 16,
                 margin_bottom = 16
             };
 
-            this.name_label = new Gtk.Label(category.name) {
+            if (category.image_path != null && category.image_path.has_prefix ("/")) {
+                this.image.set_from_file (category.image_path);
+            } else {
+                this.image.set_from_icon_name (category.image_path ?? "document-open-symbolic");
+            }
+
+            this.name_label = new Gtk.Label (category.name) {
                 ellipsize = Pango.EllipsizeMode.END,
                 max_width_chars = 64
             };
 
-            this.set_tooltip_text(category.description);
+            this.set_tooltip_text (category.description);
 
-            box.prepend(image);
-            box.append(name_label);
+            box.prepend (image);
+            box.append (name_label);
 
-            this.set_child(box);
+            this.set_child (box);
         }
     }
 }
