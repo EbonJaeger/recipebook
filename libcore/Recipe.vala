@@ -8,6 +8,8 @@ namespace RecipeBook {
         public string? prep_time { public get; construct set; default = null; }
         public string? cook_time { public get; construct set; default = null; }
 
+        public bool dirty { get; set; default = false; }
+
         public Recipe(
             Category category,
             int id,

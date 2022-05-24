@@ -86,6 +86,46 @@ namespace RecipeBook {
         }
 
         /**
+         * Inserts a new `recipe` into the database.
+         */
+        public void insert_recipe (Recipe recipe) throws IOError {
+            Sqlite.Statement stmt;
+            var sql = """
+                INSERT INTO recipes (category,title,description,picture,prep_time,cook_time) 
+                VALUES (
+                    $CATEGORY, $TITLE, $DESCRIPTION, $PICTURE, $PREP_TIME, $COOK_TIME
+                );
+            """;
+            int ret = db.prepare_v2 (sql, sql.length, out stmt);
+
+            if (ret != Sqlite.OK) {
+                throw new GLib.IOError.FAILED ("error inserting new recipe: code: %d: %s", ret, db.errmsg ());
+            }
+
+            // Bind the parameters
+            var pos = stmt.bind_parameter_index ("$CATEGORY");
+            stmt.bind_text (pos, recipe.category.id);
+            pos = stmt.bind_parameter_index ("$TITLE");
+            stmt.bind_text (pos, recipe.title);
+            pos = stmt.bind_parameter_index ("$DESCRIPTION");
+            stmt.bind_text (pos, recipe.description);
+            pos = stmt.bind_parameter_index ("$PICTURE");
+            stmt.bind_text (pos, recipe.image_path);
+            pos = stmt.bind_parameter_index ("$PREP_TIME");
+            stmt.bind_text (pos, recipe.prep_time);
+            pos = stmt.bind_parameter_index ("$COOK_TIME");
+            stmt.bind_text (pos, recipe.cook_time);
+
+            // Do the insert
+            string errmsg;
+            ret = this.db.exec (stmt.expanded_sql (), null, out errmsg);
+
+            if (ret != Sqlite.OK) {
+                throw new GLib.IOError.FAILED ("code: %d: %s", ret, errmsg);
+            }
+        }
+
+        /**
          * Re-populates a `ListStore` with all of the current categories in the
          * database.
          */

@@ -4,6 +4,7 @@ namespace RecipeBook.View {
         private Gtk.Button go_back_button;
         private Gtk.Button go_forward_button;
         private Gtk.Button home_button;
+        private Gtk.Button save_button;
         private Gtk.Stack pages;
 
         private Widgets.BreadcrumbChain breadcrumbs;
@@ -50,6 +51,14 @@ namespace RecipeBook.View {
             };
             this.header.pack_start(home_button);
 
+            this.save_button = new Gtk.Button () {
+                icon_name = "document-save-symbolic",
+                tooltip_text = "Save",
+                sensitive = false
+            };
+            this.save_button.hide ();
+            this.header.pack_start (save_button);
+
             this.set_titlebar(header);
 
             var box = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
@@ -85,44 +94,58 @@ namespace RecipeBook.View {
             this.set_child(box);
         }
 
-        private void connect_signals() {
-            this.go_back_button.clicked.connect(() => {
-                this.pages.set_visible_child_name(breadcrumbs.go_previous());
-                this.set_title();
+        private void connect_signals () {
+            // Back button
+            this.go_back_button.clicked.connect (() => {
+                this.pages.set_visible_child_name (breadcrumbs.go_previous ());
+                this.set_title ();
+                this.save_button.hide ();
 
                 this.go_forward_button.sensitive = true;
-                if (breadcrumbs.is_at_last()) {
+                if (breadcrumbs.is_at_last ()) {
                     this.go_back_button.sensitive = false;
                 }
             });
 
-            this.go_forward_button.clicked.connect(() => {
-                this.pages.set_visible_child_name(breadcrumbs.go_forward());
-                this.set_title();
+            // Forward button
+            this.go_forward_button.clicked.connect (() => {
+                this.pages.set_visible_child_name (breadcrumbs.go_forward ());
+                this.set_title ();
+
+                // Make sure our view and header are set if going to
+                // a recipe edit view.
+                var view = pages.get_visible_child () as AbstractView;
+                if (view is EditRecipe) {
+                    this.setup_recipe_edit_page (view as EditRecipe, view.recipe);
+                }
 
                 this.go_back_button.sensitive = true;
-                if (!breadcrumbs.has_forward_history()) {
+                if (!breadcrumbs.has_forward_history ()) {
                     this.go_forward_button.sensitive = false;
                 }
             });
 
-            this.home_button.clicked.connect(() => {
-                this.breadcrumbs.go_back_until(categories_view.id);
-                if (breadcrumbs.has_forward_history()) {
+            // Home button
+            this.home_button.clicked.connect (() => {
+                this.save_button.hide ();
+                this.breadcrumbs.go_back_until (categories_view.id);
+                if (breadcrumbs.has_forward_history ()) {
                     this.go_forward_button.sensitive = true;
                 }
             });
 
-            this.breadcrumbs.navigation_changed.connect((id) => {
-                this.pages.set_visible_child_name(id);
-                this.set_title();
+            // Breadcrumb items
+            this.breadcrumbs.navigation_changed.connect ((id) => {
+                this.pages.set_visible_child_name (id);
+                this.set_title ();
+                this.save_button.hide ();
 
-                if (breadcrumbs.is_at_last()) {
+                if (breadcrumbs.is_at_last ()) {
                     this.go_back_button.sensitive = false;
                 }
             });
 
-            this.categories_view.button_clicked.connect(on_category_button_clicked);
+            this.categories_view.button_clicked.connect (on_category_button_clicked);
         }
 
         /**
@@ -177,23 +200,55 @@ namespace RecipeBook.View {
          * and if need be, updates the Edit Recipe page with the new
          * recipe.
          */
-        private void on_recipe_button_clicked(string id, Recipe recipe) {
-            debug("recipe button clicked with ID '%s'", id);
-            var view = pages.get_child_by_name(id) as AbstractView;
+        private void on_recipe_button_clicked (string id, Recipe recipe) {
+            debug ("recipe button clicked with ID '%s'", id);
+            var view = pages.get_child_by_name (id) as AbstractView;
 
             // If it's the new recipe button, update the edit
             // view with the new (blank) recipe.
             if (view is EditRecipe) {
-                debug("updating edit recipe page");
-                var edit = view as EditRecipe;
-                edit.update_from_recipe(recipe);
+                this.setup_recipe_edit_page (view as EditRecipe, recipe);
             }
 
             // Update the view
-            this.pages.set_visible_child(view);
-            this.set_title();
-            this.breadcrumbs.append(view);
+            this.pages.set_visible_child (view);
+            this.set_title ();
+            this.breadcrumbs.append (view);
             this.go_forward_button.sensitive = false;
+        }
+
+        /**
+         * Sets various properties of the edit `view` with a `recipe`.
+         *
+         * This updates the UI, and hooks up the save button in the
+         * header bar.
+         */
+        private void setup_recipe_edit_page (EditRecipe view, Recipe recipe) {
+            debug ("updating edit recipe page");
+            view.update_from_recipe (recipe);
+
+            // Show the save button, but don't make it sensitive
+            this.save_button.show ();
+            this.save_button.sensitive = recipe.dirty;
+
+            // Make the save button sensitive if a property on
+            // the recipe changes.
+            recipe.notify.connect (() => {
+                this.save_button.sensitive = true;
+                recipe.dirty = true;
+            });
+
+            // Connect the save button clicked to save the recipe
+            this.save_button.clicked.connect(() => {
+                try {
+                    var db = Database.@get ();
+                    db.insert_recipe (recipe);
+                    this.save_button.sensitive = false;
+                    recipe.dirty = false;
+                } catch (IOError e) {
+                    critical ("error inserting recipe into database: %s", e.message);
+                }
+            });
         }
 
         /**
