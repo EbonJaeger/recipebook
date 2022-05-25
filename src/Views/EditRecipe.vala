@@ -52,6 +52,12 @@ namespace RecipeBook.View {
             upper_form_controls.append (upper_form_control_group);
             form_box.append (upper_form_controls);
 
+            var upper_separator = new Gtk.Separator (Gtk.Orientation.HORIZONTAL) {
+                margin_top = 16,
+                margin_bottom = 16
+            };
+            form_box.append (upper_separator);
+
             this.append (form_box);
         }
     
