@@ -1,0 +1,19 @@
+# Adapted from the CI build for Budgie Desktop, created by Campbell Jones (serebit)
+
+name: Build on Ubuntu 22.04
+on:
+  push:
+    branches:
+    - master
+  pull_requests:
+    branches:
+    - master
+jobs:
+  unbuntu:
+    runs-on: unbuntu-22.04
+    steps:
+    - uses: actions/checkout@v1
+    - run: sudo apt update
+    - run: sudo apt install meson ninja-build libgee-0.8-dev libgtk-4-dev valac
+    - run: meson build
+    - run: meson compile -C build
